@@ -1,25 +1,33 @@
 from abc import abstractmethod
+from collections.abc import AsyncGenerator
 
 from pydantic import BaseModel
 
 from src.app.core.models import Context, IncomingMessage, OutgoingMessage
 
 
-class NodeResult(BaseModel):
+class Ask(BaseModel):
     message: OutgoingMessage | None = None
+    expect: str = "text"
+
+
+class Done(BaseModel):
     port: str = "out"
-    wait: bool = False
+    message: OutgoingMessage | None = None
+
+
+NodeGen = AsyncGenerator[Ask | Done, IncomingMessage | None]
 
 
 class BaseNode:
-    name = ""
+    name: str = ""
 
     def __init__(self, id: str, **config):
         self.id = id
         self.config = config
 
     @abstractmethod
-    async def run(self, ctx: Context, msg: IncomingMessage) -> NodeResult:
+    def run(self, ctx: Context) -> NodeGen:
         raise NotImplementedError
 
 

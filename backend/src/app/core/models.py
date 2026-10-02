@@ -10,9 +10,9 @@ class Button(BaseModel):
 
 class Context:
     def __init__(self):
-        self.history: list[dict] = []
-        self.cursor: str | None = None
-        self.resuming: bool = False
+        self.history = []
+        self.node_id = None
+        self.gen = None
 
 
 class IncomingMessage(BaseModel):
@@ -26,3 +26,8 @@ class OutgoingMessage(BaseModel):
     text: str
     buttons: list[Button] = Field(default_factory=list)
     metadata: dict | None = None
+
+
+class LLMReply(BaseModel):
+    text: str
+    buttons: list[Button] = Field(default_factory=list)

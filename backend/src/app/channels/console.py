@@ -1,6 +1,11 @@
 from src.app.core.models import Button
 
 
+def ask_input():
+    message = input("you> ")
+    return message
+
+
 def render(out):
     print(f"assistant> {out.text}")
     for i, b in enumerate(out.buttons, 1):

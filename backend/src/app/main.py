@@ -1,7 +1,7 @@
 # %%
 import asyncio
 
-from src.app.channels.console import render, resolve_button
+from src.app.channels.console import ask_input, render, resolve_button
 from src.app.core.flow import Context, Flow
 from src.app.core.models import Button, IncomingMessage
 from src.app.core.types import Channels
@@ -10,53 +10,58 @@ from src.app.nodes.buttons import ButtonsNode
 from src.app.nodes.llm import LLMNode
 
 flow = (
-    Flow(start="menu")
+    Flow(start="intro")
+    .add(StaticReplyNode("intro", text="Welcome to Shashank's Dental Clinic\n\nHow can we help you today?"))
     .add(
         ButtonsNode(
-            "menu",
+            "choose",
             text="What do you want to do?",
             buttons=[
-                {"id": "chat", "label": "Chat with AI"},
-                {"id": "book", "label": "Book appointment"},
+                {"id": "book", "label": "Book Appointment"},
+                {"id": "cancel", "label": "Cancel Appointment"},
+                {"id": "update", "label": "Update Appointment"},
+                {"id": "gen", "label": "General Query"},
             ],
         )
     )
+    .add(StaticReplyNode("book", text="You have booked an appointment"))
+    .add(StaticReplyNode("cancel", text="You have cancelled your appointment"))
+    .add(StaticReplyNode("update", text="You have updated your appointment"))
+    .add(StaticReplyNode("gen", text="Please let us know about your queries."))
     .add(LLMNode("llm"))
-    .add(
-        ButtonsNode(
-            "book",
-            text="Confirm booking?",
-            buttons=[
-                {"id": "yes", "label": "Yes"},
-                {"id": "no", "label": "No"},
-            ],
-        )
-    )
-    .add(StaticReplyNode("booked", text="Booked!"))  # trivial node returning a message
-    .add(StaticReplyNode("cancelled", text="Cancelled."))
-    .connect("menu", "chat", "llm")
-    .connect("menu", "book", "book")
-    .connect("book", "yes", "booked")
-    .connect("book", "no", "cancelled")
+    .connect("intro", "out", "choose")
+    .connect("choose", "book", "book")
+    .connect("choose", "cancel", "cancel")
+    .connect("choose", "update", "update")
+    .connect("choose", "gen", "gen")
+    .connect("book", "out", "llm")
+    .connect("gen", "out", "llm")
 )
 
 
 async def main():
     ctx = Context()
+    result = await flow.handle(ctx)  # flow speaks first, no user input
     pending: list[Button] = []
+
     while True:
-        raw = input("you> ")
+        for out in result.outputs:
+            render(out)
+            pending = out.buttons or pending
+
+        if result.awaiting is None:  # flow finished
+            print("-- flow finished --")
+            break
+
+        raw = ask_input()
         msg = IncomingMessage(
             channel=Channels.Console,
             user_id="Swayam Singhal",
             text=raw,
-            button_id=resolve_button(raw, pending),
+            button_id=resolve_button(raw, pending) if result.awaiting == "button" else None,
         )
-        outputs = await flow.handle(ctx, msg)
-        pending = []
-        for out in outputs:
-            render(out)
-            pending = out.buttons or pending
+        result = await flow.handle(ctx, msg)
+        pending = []  # buttons are only valid for the next reply
 
 
 asyncio.run(main())

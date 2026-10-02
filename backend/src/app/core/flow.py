@@ -1,5 +1,12 @@
+from pydantic import BaseModel
+
 from src.app.core.models import Context, IncomingMessage, OutgoingMessage
-from src.app.core.node import BaseNode
+from src.app.core.node import Ask, BaseNode
+
+
+class FlowResult(BaseModel):
+    outputs: list[OutgoingMessage]
+    awaiting: str | None
 
 
 class Flow:
@@ -16,27 +23,33 @@ class Flow:
         self.edges[(src, port)] = dst
         return self
 
-    async def handle(self, ctx: Context, msg: IncomingMessage) -> list[OutgoingMessage]:
-        outputs: list[OutgoingMessage] = []
-        ctx.history.append({"role": "user", "content": msg.text})
+    def _enter(self, ctx, node_id):
+        ctx.node_id = node_id
+        ctx.gen = self.nodes[node_id].run(ctx)
 
-        node_id = ctx.cursor or self.start
-        ctx.resuming = ctx.cursor is not None
-        ctx.cursor = None
+    async def handle(self, ctx: Context, msg: IncomingMessage | None = None) -> FlowResult:
+        outputs: list[OutgoingMessage] = []
+
+        if ctx.gen is None:
+            self._enter(ctx, self.start)
+        else:
+            if msg is None:
+                raise ValueError("message cannot be none after yield")
+            ctx.history.append({"role": "user", "content": msg.text})
 
         while True:
-            result = await self.nodes[node_id].run(ctx, msg)
-            ctx.resuming = False
+            event = await ctx.gen.asend(msg)
+            msg = None
 
-            if result.message:
-                outputs.append(result.message)
-                ctx.history.append({"role": "assistant", "content": result.message.text})
+            if event.message:
+                outputs.append(event.message)
+                ctx.history.append({"role": "assistant", "content": event.message.text})
 
-            if result.wait:
-                ctx.cursor = node_id
-                return outputs
+            if isinstance(event, Ask):
+                return FlowResult(outputs=outputs, awaiting=event.expect)
 
-            nxt = self.edges.get((node_id, result.port))
+            nxt = self.edges.get((ctx.node_id, event.port))
             if nxt is None:
-                return outputs
-            node_id = nxt
+                ctx.gen = ctx.node_id = None
+                return FlowResult(outputs=outputs, awaiting=None)
+            self._enter(ctx, nxt)

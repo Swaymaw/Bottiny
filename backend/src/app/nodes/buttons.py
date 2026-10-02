@@ -1,23 +1,23 @@
 from src.app.core.models import Button, OutgoingMessage
-from src.app.core.node import BaseNode, NodeResult, register
+from src.app.core.node import Ask, BaseNode, Done, NodeGen, register
 
 
 @register
 class ButtonsNode(BaseNode):
     name = "buttons"
 
-    async def run(self, ctx, msg):
+    async def run(self, ctx) -> NodeGen:
         buttons = [Button(**b) for b in self.config["buttons"]]
+        ids = {b.id for b in buttons}
 
-        if ctx.resuming:
-            if msg.button_id in {b.id for b in buttons}:
-                return NodeResult(port=msg.button_id)  # route by button
-            return NodeResult(  # invalid -> re-ask
-                message=OutgoingMessage(text="Please pick one of the options.", buttons=buttons),
-                wait=True,
-            )
+        msg = yield Ask(message=OutgoingMessage(text=self.config["text"], buttons=buttons), expect="button")
 
-        return NodeResult(
-            message=OutgoingMessage(text=self.config["text"], buttons=buttons),
-            wait=True,
-        )
+        if msg is None:
+            raise ValueError("msg cannot be empty after ask")
+
+        while msg.button_id not in ids:
+            msg = yield Ask(message=OutgoingMessage(text="Please pick one of the options.", buttons=buttons), expect="button")
+            if msg is None:
+                raise ValueError("msg cannot be empty after ask")
+
+        yield Done(port=msg.button_id)
