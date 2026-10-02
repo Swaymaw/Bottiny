@@ -24,12 +24,12 @@ class Channel(ABC):
     async def render(self, target, out: OutgoingMessage) -> None:
         pass
 
-    def resolve_button(self, raw: str, buttons: list[Button]) -> str | None:
-        raw = raw.strip().lower()
+    def resolve_button(self, raw: str, buttons: list[Button]) -> tuple[str, bool]:
+        cleaned_raw = raw.strip().lower()
         for i, b in enumerate(buttons, 1):
-            if raw in (str(i), b.id.lower(), b.label.lower()):
-                return b.id
-        return None
+            if cleaned_raw in (str(i), b.id.lower(), b.label.lower()):
+                return b.id, True
+        return raw, False
 
     async def process(self, user_id: str, name: str, raw: str, target, restart: bool = False):
         if restart:
@@ -40,13 +40,22 @@ class Channel(ABC):
             s = self.sessions[user_id] = Session()
             result = await self.flow.handle(s.ctx)
         else:
+            correct = False
+            if s.awaiting == "button":
+                raw, correct = self.resolve_button(raw, s.pending)
+
             msg = IncomingMessage(
                 channel=self.channel,
                 user_id=user_id,
                 name=name,
                 text=raw,
-                button_id=self.resolve_button(raw, s.pending) if s.awaiting == "button" else None,
+                button_id=raw if correct else None,
             )
+            if correct:
+                chosen = next((i for i in s.pending if i.id == raw), None)
+                if chosen:
+                    await self.render(target, OutgoingMessage(text=f"You chose {chosen.label}"))
+
             result = await self.flow.handle(s.ctx, msg)
 
         s.pending = []

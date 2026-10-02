@@ -27,9 +27,8 @@ class LLMNode(BaseNode):
 
             if expect == "button":
                 chosen = next((b for b in reply.buttons if b.id == msg.button_id), None)
-                if chosen is None:
-                    continue
-                ctx.history[-1]["content"] = chosen.label
+                if chosen is not None:
+                    ctx.history[-1]["content"] = chosen.label
 
             system = self.config.get("system", ASSISTANT_PROMPT.format(user_id=msg.name)) + FORMAT_HINT
 
