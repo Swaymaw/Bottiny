@@ -1,22 +1,33 @@
-from src.app.core.models import Button
+# src/app/channels/console.py
+import asyncio
+
+from src.app.channels.base import Channel
+from src.app.core.types import Channels
 
 
-def ask_input():
-    message = input("you> ")
-    return message
+class Console(Channel):
+    channel = Channels.Console
 
+    def __init__(self, flow, name: str = "Console User"):
+        super().__init__(flow)
+        self.user_id = "console"
+        self.name = name
 
-def render(out):
-    print(f"assistant> {out.text}")
-    for i, b in enumerate(out.buttons, 1):
-        print(f"  [{i}] {b.label}")
-    if out.buttons:
-        print(f"  press <1-{len(out.buttons)}> + enter")
+    async def render(self, target, out):
+        print(f"assistant> {out.text}")
+        for i, b in enumerate(out.buttons, 1):
+            print(f"  [{i}] {b.label}")
+        if out.buttons:
+            print(f"  press <1-{len(out.buttons)}> + enter")
 
+    def run(self):
+        asyncio.run(self._loop())
 
-def resolve_button(raw: str, buttons: list[Button]) -> str | None:
-    raw = raw.strip().lower()
-    for i, b in enumerate(buttons, 1):
-        if raw in (str(i), b.id.lower(), b.label.lower()):
-            return b.id
-    return None
+    async def _loop(self):
+        await self.process(self.user_id, self.name, "", None)
+
+        while self.user_id in self.sessions:
+            raw = input("you> ")
+            await self.process(self.user_id, self.name, raw, None)
+
+        print("-- flow finished --")

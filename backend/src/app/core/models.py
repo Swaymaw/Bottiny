@@ -18,6 +18,7 @@ class Context:
 class IncomingMessage(BaseModel):
     channel: Channels
     user_id: str
+    name: str
     text: str
     button_id: str | None = None
 

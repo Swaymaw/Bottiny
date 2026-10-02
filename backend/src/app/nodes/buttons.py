@@ -9,14 +9,15 @@ class ButtonsNode(BaseNode):
     async def run(self, ctx) -> NodeGen:
         buttons = [Button(**b) for b in self.config["buttons"]]
         ids = {b.id for b in buttons}
+        text = self.config.get("text", "Please pick one of the options.")
 
-        msg = yield Ask(message=OutgoingMessage(text=self.config["text"], buttons=buttons), expect="button")
+        msg = yield Ask(message=OutgoingMessage(text=text, buttons=buttons), expect="button")
 
         if msg is None:
             raise ValueError("msg cannot be empty after ask")
 
         while msg.button_id not in ids:
-            msg = yield Ask(message=OutgoingMessage(text="Please pick one of the options.", buttons=buttons), expect="button")
+            msg = yield Ask(message=OutgoingMessage(text=text, buttons=buttons), expect="button")
             if msg is None:
                 raise ValueError("msg cannot be empty after ask")
 

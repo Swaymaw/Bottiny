@@ -31,7 +31,7 @@ class LLMNode(BaseNode):
                     continue
                 ctx.history[-1]["content"] = chosen.label
 
-            system = self.config.get("system", ASSISTANT_PROMPT.format(user_id=msg.user_id)) + FORMAT_HINT
+            system = self.config.get("system", ASSISTANT_PROMPT.format(user_id=msg.name)) + FORMAT_HINT
 
             resp = await acompletion(
                 model=self.config.get("model", "openai/ibm-granite/granite-4.3-3b-GGUF"),

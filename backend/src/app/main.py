@@ -1,10 +1,9 @@
 # %%
-import asyncio
 
-from src.app.channels.console import ask_input, render, resolve_button
-from src.app.core.flow import Context, Flow
-from src.app.core.models import Button, IncomingMessage
-from src.app.core.types import Channels
+from dotenv import find_dotenv, load_dotenv
+
+from src.app.channels.telegram import Telegram
+from src.app.core.flow import Flow
 from src.app.nodes.basic import StaticReplyNode
 from src.app.nodes.buttons import ButtonsNode
 from src.app.nodes.llm import LLMNode
@@ -15,7 +14,6 @@ flow = (
     .add(
         ButtonsNode(
             "choose",
-            text="What do you want to do?",
             buttons=[
                 {"id": "book", "label": "Book Appointment"},
                 {"id": "cancel", "label": "Cancel Appointment"},
@@ -38,30 +36,7 @@ flow = (
     .connect("gen", "out", "llm")
 )
 
+load_dotenv(find_dotenv())
 
-async def main():
-    ctx = Context()
-    result = await flow.handle(ctx)  # flow speaks first, no user input
-    pending: list[Button] = []
-
-    while True:
-        for out in result.outputs:
-            render(out)
-            pending = out.buttons or pending
-
-        if result.awaiting is None:  # flow finished
-            print("-- flow finished --")
-            break
-
-        raw = ask_input()
-        msg = IncomingMessage(
-            channel=Channels.Console,
-            user_id="Swayam Singhal",
-            text=raw,
-            button_id=resolve_button(raw, pending) if result.awaiting == "button" else None,
-        )
-        result = await flow.handle(ctx, msg)
-        pending = []  # buttons are only valid for the next reply
-
-
-asyncio.run(main())
+# Console(flow, name="Swayam Singhal").run()
+Telegram(flow).run()
