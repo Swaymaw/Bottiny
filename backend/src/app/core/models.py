@@ -32,3 +32,22 @@ class OutgoingMessage(BaseModel):
 class LLMReply(BaseModel):
     text: str
     buttons: list[Button] = Field(default_factory=list)
+
+
+class NodeSpec(BaseModel):
+    id: str
+    type: str
+    config: dict = Field(default_factory=dict)
+
+
+class EdgeSpec(BaseModel):
+    from_: str = Field(alias="from")
+    port: str = "out"
+    to: str
+
+
+class FlowSpec(BaseModel):
+    name: str
+    start: str
+    nodes: list[NodeSpec]
+    edges: list[EdgeSpec]

@@ -5,9 +5,13 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "asyncpg>=0.31.0",
+    "fastapi[uvicorn]>=0.142.2",
     "litellm>=1.103.2",
     "pydotenv>=0.0.7",
     "python-telegram-bot>=22.8",
+    "sqlalchemy[asyncio]>=2.1.2",
+    "uvicorn>=0.54.0",
 ]
 
 [dependency-groups]

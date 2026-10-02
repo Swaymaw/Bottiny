@@ -4,10 +4,12 @@ from abc import ABC, abstractmethod
 from src.app.core.flow import Context, Flow
 from src.app.core.models import Button, IncomingMessage, OutgoingMessage
 from src.app.core.types import Channels
+from src.app.services.store import load_flow
 
 
 class Session:
-    def __init__(self):
+    def __init__(self, flow: Flow):
+        self.flow = flow
         self.ctx = Context()
         self.pending: list[Button] = []
         self.awaiting: str | None = None
@@ -16,8 +18,8 @@ class Session:
 class Channel(ABC):
     channel: Channels
 
-    def __init__(self, flow: Flow):
-        self.flow = flow
+    def __init__(self, flow_name: str):
+        self.flow_name = flow_name
         self.sessions: dict[str, Session] = {}
 
     @abstractmethod
@@ -37,8 +39,12 @@ class Channel(ABC):
 
         s = self.sessions.get(user_id)
         if s is None:
-            s = self.sessions[user_id] = Session()
-            result = await self.flow.handle(s.ctx)
+            flow = await load_flow(self.flow_name)
+            if flow is None:  # disabled or deleted
+                await self.render(target, OutgoingMessage(text="This bot is currently unavailable."))
+                return
+            s = self.sessions[user_id] = Session(flow)
+            result = await s.flow.handle(s.ctx)
         else:
             correct = False
             if s.awaiting == "button":
@@ -56,7 +62,7 @@ class Channel(ABC):
                 if chosen:
                     await self.render(target, OutgoingMessage(text=f"You chose {chosen.label}"))
 
-            result = await self.flow.handle(s.ctx, msg)
+            result = await s.flow.handle(s.ctx, msg)
 
         s.pending = []
         for out in result.outputs:

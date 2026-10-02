@@ -8,8 +8,8 @@ from src.app.core.types import Channels
 class Console(Channel):
     channel = Channels.Console
 
-    def __init__(self, flow, name: str = "Console User"):
-        super().__init__(flow)
+    def __init__(self, flow_name, name: str = "Console User"):
+        super().__init__(flow_name)
         self.user_id = "console"
         self.name = name
 

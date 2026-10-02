@@ -11,13 +11,13 @@ from src.app.core.types import Channels
 class Telegram(Channel):
     channel = Channels.Telegram
 
-    def __init__(self, flow):
-        super().__init__(flow)
-        self.app = Application.builder().token(os.getenv("TELEGRAM_BOT_TOKEN", "NOT_FOUND")).build()
+    def __init__(self, flow_name):
+        super().__init__(flow_name)
+        self.app = Application.builder().token(os.environ["TELEGRAM_BOT_TOKEN"]).build()
         self.app.add_handler(CommandHandler("start", self.on_event))
         self.app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.on_event))
         self.app.add_handler(CallbackQueryHandler(self.on_event))
-        print("--BUILD SUCESSFUL--")
+        print("--BUILD SUCCESSFUL--")
 
     async def render(self, target, out):
         markup = None
