@@ -31,7 +31,7 @@ watch(
         else store.reset();
         await nextTick();
         setTimeout(
-            () => fitView({ padding: 0.3, minZoom: 0.05, maxZoom: 3.0 }),
+            () => fitView({ padding: 0.3, minZoom: 0.1, maxZoom: 4.0 }),
             50,
         );
     },
@@ -65,7 +65,7 @@ function autoArrange() {
     for (const [id, position] of Object.entries(positions))
         updateNode(id, { position });
     nextTick(() =>
-        fitView({ padding: 0.3, minZoom: 0.05, maxZoom: 3.0, duration: 300 }),
+        fitView({ padding: 0.3, minZoom: 0.1, maxZoom: 4.0, duration: 300 }),
     );
 }
 
@@ -82,6 +82,8 @@ async function finish() {
         class="relative h-full overflow-hidden rounded-3xl bg-zinc-800"
     >
         <VueFlow
+            min-zoom="0.10"
+            max-zoom="4"
             v-model:nodes="store.nodes"
             v-model:edges="store.edges"
             :connect-on-click="true"
@@ -92,7 +94,7 @@ async function finish() {
                 <FlowNode v-bind="nodeProps" />
             </template>
 
-            <Background pattern-color="#999" />
+            <Background pattern-color="#666" gap="24" size="3" />
         </VueFlow>
 
         <div

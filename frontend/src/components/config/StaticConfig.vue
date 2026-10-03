@@ -8,7 +8,7 @@ defineProps({ config: { type: Object, required: true } });
         <textarea
             v-model="config.text"
             placeholder="Print('Hello, World!')"
-            class="bg-black rounded-md p-2 text-sm w-full"
+            class="bg-black rounded-md p-2 text-sm w-full mt-3"
             rows="4"
         />
     </label>

@@ -8,8 +8,11 @@ const edge = (source, port, target) => ({
   source,
   sourceHandle: port,
   target,
-  type: "smoothstep",
-  markerEnd: { type: MarkerType.ArrowClosed, color: "#888" },
+  style: {
+    stroke: "#888",
+    strokeWidth: 3,
+  },
+  markerEnd: { type: MarkerType.ArrowClosed },
 });
 
 function layoutGraph({

@@ -34,13 +34,13 @@ watch(
 
 <template>
     <div
-        class="w-auto rounded-3xl border-2 text-white bg-zinc-900"
-        :class="{ 'shadow-[5px_5px_10px_10px_#111111]': selected }"
+        class="w-auto rounded-3xl text-white bg-zinc-900"
+        :class="{ 'border-2': selected }"
         :style="{ '--c': def.color }"
     >
-        <div class="relative m-4">
+        <div class="relative mr-4 mt-1">
             <button
-                class="nodrag absolute right-0 top-0 p-0 text-2xl text-white/70"
+                class="nodrag absolute right-0 top-3 p-0 text-2xl text-white/70"
                 :class="{ 'text-yellow-400': isStart }"
                 title="Set as start node"
                 @click="store.startId = id"
@@ -52,7 +52,7 @@ watch(
         <Handle
             type="target"
             :position="Position.Left"
-            class="-left-1.5 h-5! w-5! border-3! border-white! bg-(--c)!"
+            class="-left-1.5 h-5! w-5! border-2! border-white! bg-(--c)!"
         />
 
         <div class="nodrag px-4 pt-4 pb-1.5">
@@ -62,9 +62,9 @@ watch(
         <PortRow v-for="p in ports" :key="p.id" :node-id="id" :port="p" />
 
         <div
-            class="group m-3 inline-flex h-13 min-w-13 p-4 items-center justify-center rounded-full bg-(--c) text-lg transition-all duration-200"
+            class="group m-3 inline-flex h-13 min-w-13 p-1 items-center justify-center rounded-full bg-(--c) text-lg transition-all duration-200 hover:p-4"
         >
-            <img :src="def.logo" class="h-5 w-5 shrink-0" />
+            <img :src="def.logo" class="h-6 w-6 shrink-0" />
 
             <span
                 class="max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-200 group-hover:ml-2.5 group-hover:max-w-64 group-hover:opacity-100"

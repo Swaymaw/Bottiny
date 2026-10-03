@@ -14,13 +14,12 @@ const removeChoice = (i) => props.config.buttons.splice(i, 1);
         <label class="block mb-2">
             Question
             <input
-                class="bg-black rounded-md p-2 text-sm w-full"
+                class="bg-black rounded-md p-2 text-sm w-full mt-3"
                 v-model="config.text"
                 placeholder="Pick one please..."
             />
         </label>
-        <hr class="border-t-4 border-dashed border-gray-300 mb-4" />
-        <div class="mb-2">Choices</div>
+        <div class="mb-2 border-t border-[#333] pt-5">Choices</div>
         <ButtonItem
             v-for="(b, i) in config.buttons"
             :key="b.id"
@@ -28,7 +27,7 @@ const removeChoice = (i) => props.config.buttons.splice(i, 1);
             @remove="removeChoice(i)"
         />
         <button
-            class="border-dotted border-2 w-full rounded-md mt-5"
+            class="border-dotted border-2 w-full rounded-md mt-5 pt-1 pb-1 text-[#ccc] hover:text-white"
             @click="addChoice"
         >
             + Add choice

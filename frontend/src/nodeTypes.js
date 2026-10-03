@@ -10,7 +10,7 @@ export const NODE_TYPES = {
     logo: "/icons/static.svg",
     config: StaticConfig,
     defaultConfig: () => ({ text: "" }),
-    ports: () => [{ id: "out", label: "next" }],
+    ports: () => [{ id: "out", label: "Next" }],
     validate: (c) => (c.text.trim() ? null : "Print node needs a message"),
   },
 
