@@ -76,7 +76,7 @@ function layoutGraph({
   }
 
   const GAP_X = 180;
-  const GAP_Y = 60;
+  const GAP_Y = 100;
 
   const columnWidths = layers.map((layer) =>
     Math.max(...layer.map((id) => size(id).w), 0),
@@ -147,12 +147,23 @@ export const useEditorStore = defineStore("editor", {
       this.error = null;
       try {
         const { spec } = await api.getFlow(name);
-        const layout = layoutGraph({
-          ids: spec.nodes.map((n) => n.id),
-          start: spec.start,
-          nextOf: (id) =>
-            spec.edges.filter((e) => e.from === id).map((e) => e.to),
-        });
+        const hasPositions = spec.nodes.every((n) => n.position);
+
+        const layout = hasPositions
+          ? {}
+          : layoutGraph({
+              ids: spec.nodes.map((n) => n.id),
+              start: spec.start,
+              nextOf: (id) =>
+                spec.edges.filter((e) => e.from === id).map((e) => e.to),
+              size: (id) => {
+                const n = spec.nodes.find((x) => x.id === id);
+                const type = NODE_TYPES[n?.type];
+                if (!type) return { w: 300, h: 200 };
+                return { w: 300, h: 120 + type.ports(n.config).length * 45 };
+              },
+            });
+
         this.nodes = spec.nodes.map((n) => {
           if (!NODE_TYPES[n.type])
             throw new Error(`Unknown node type "${n.type}"`);
@@ -172,6 +183,7 @@ export const useEditorStore = defineStore("editor", {
           isNew: false,
           startId: spec.start,
           picker: null,
+          wasAutoLaidOut: !hasPositions,
         });
       } catch (e) {
         this.error = e.message;

@@ -27,13 +27,21 @@ const {
 watch(
     () => route.params.name,
     async (name) => {
-        if (name) await store.load(name);
-        else store.reset();
-        await nextTick();
-        setTimeout(
-            () => fitView({ padding: 0.3, minZoom: 0.1, maxZoom: 4.0 }),
-            50,
-        );
+        if (name) {
+            await store.load(name);
+            await nextTick();
+            setTimeout(() => {
+                if (store.wasAutoLaidOut) {
+                    autoArrange();
+                } else {
+                    fitView({ padding: 0.3, minZoom: 0.1, maxZoom: 4.0 });
+                }
+            }, 60);
+        } else {
+            store.reset();
+            await nextTick();
+            setTimeout(() => fitView({ padding: 0.3, maxZoom: 1.0 }), 60);
+        }
     },
     { immediate: true },
 );
