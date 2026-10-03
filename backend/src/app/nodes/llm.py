@@ -1,3 +1,5 @@
+import os
+
 from litellm import acompletion
 from pydantic import ValidationError
 
@@ -34,7 +36,7 @@ class LLMNode(BaseNode):
 
             resp = await acompletion(
                 model=self.config.get("model", "openai/ibm-granite/granite-4.3-3b-GGUF"),
-                api_base=self.config.get("api_base", "http://192.168.1.34:8080/v1"),
+                api_base=self.config.get("api_base", os.getenv("API_BASE", "http://localhost:8080/v1")),
                 messages=[{"role": "system", "content": system}, *ctx.history],
                 response_format=LLMReply,
             )
