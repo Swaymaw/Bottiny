@@ -38,6 +38,17 @@ watch(
         :class="{ 'shadow-[5px_5px_10px_10px_#111111]': selected }"
         :style="{ '--c': def.color }"
     >
+        <div class="relative m-4">
+            <button
+                class="nodrag absolute right-0 top-0 p-0 text-2xl text-white/70"
+                :class="{ 'text-yellow-400': isStart }"
+                title="Set as start node"
+                @click="store.startId = id"
+            >
+                ★
+            </button>
+        </div>
+
         <Handle
             type="target"
             :position="Position.Left"
@@ -51,18 +62,15 @@ watch(
         <PortRow v-for="p in ports" :key="p.id" :node-id="id" :port="p" />
 
         <div
-            class="mt-1.5 inline-flex items-center gap-2.5 rounded-tr-[14px] rounded-bl-[17px] bg-(--c) px-5.5 py-1.5 pl-6.5 text-lg"
+            class="group m-3 inline-flex h-13 min-w-13 p-4 items-center justify-center rounded-full bg-(--c) text-lg transition-all duration-200"
         >
-            {{ def.label }}
+            <img :src="def.logo" class="h-5 w-5 shrink-0" />
 
-            <button
-                class="nodrag border-0 bg-transparent p-0 text-lg text-white/40"
-                :class="{ 'text-yellow-400': isStart }"
-                title="Set as start node"
-                @click="store.startId = id"
+            <span
+                class="max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-200 group-hover:ml-2.5 group-hover:max-w-64 group-hover:opacity-100"
             >
-                ★
-            </button>
+                {{ def.label }}
+            </span>
         </div>
     </div>
 </template>

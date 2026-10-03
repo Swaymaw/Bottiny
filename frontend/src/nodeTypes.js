@@ -7,6 +7,7 @@ export const NODE_TYPES = {
   static: {
     label: "Print",
     color: "#5a9a5a",
+    logo: "/icons/static.svg",
     config: StaticConfig,
     defaultConfig: () => ({ text: "" }),
     ports: () => [{ id: "out", label: "next" }],
@@ -16,6 +17,7 @@ export const NODE_TYPES = {
   buttons: {
     label: "Button",
     color: "#c0436e",
+    logo: "/icons/buttons.svg",
     config: ButtonsConfig,
     defaultConfig: () => ({
       text: "",
@@ -35,6 +37,7 @@ export const NODE_TYPES = {
   llm: {
     label: "LLM",
     color: "#4b4bff",
+    logo: "/icons/llm.svg",
     config: LLMConfig,
     defaultConfig: () => ({ system: "", loop: true }),
     ports: (c) => (c.loop ? [] : [{ id: "out", label: "when done" }]),

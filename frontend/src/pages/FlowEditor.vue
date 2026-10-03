@@ -21,6 +21,7 @@ const {
     getSelectedEdges,
     removeNodes,
     removeEdges,
+    updateNode,
 } = useVueFlow();
 
 watch(
@@ -29,7 +30,10 @@ watch(
         if (name) await store.load(name);
         else store.reset();
         await nextTick();
-        setTimeout(() => fitView({ padding: 0.3, maxZoom: 1 }), 50); // wait for nodes to be measured
+        setTimeout(
+            () => fitView({ padding: 0.3, minZoom: 0.05, maxZoom: 3.0 }),
+            50,
+        );
     },
     { immediate: true },
 );
@@ -55,6 +59,16 @@ function deleteSelected() {
     removeNodes(getSelectedNodes.value);
 }
 
+function autoArrange() {
+    const positions = store.computeLayout();
+    if (!positions) return;
+    for (const [id, position] of Object.entries(positions))
+        updateNode(id, { position });
+    nextTick(() =>
+        fitView({ padding: 0.3, minZoom: 0.05, maxZoom: 3.0, duration: 300 }),
+    );
+}
+
 async function finish() {
     if (!(await store.save())) return;
     await flows.fetch();
@@ -70,7 +84,7 @@ async function finish() {
         <VueFlow
             v-model:nodes="store.nodes"
             v-model:edges="store.edges"
-            :connect-on-click="false"
+            :connect-on-click="true"
             :delete-key-code="['Backspace', 'Delete']"
             @connect="store.connect"
         >
@@ -78,7 +92,7 @@ async function finish() {
                 <FlowNode v-bind="nodeProps" />
             </template>
 
-            <Background pattern-color="#2a2a2a" />
+            <Background pattern-color="#999" />
         </VueFlow>
 
         <div
@@ -97,27 +111,38 @@ async function finish() {
         </div>
 
         <div
-            class="absolute bottom-5 right-5 z-10 flex items-center gap-4 rounded-full border border-zinc-700 bg-zinc-900/85 px-5 py-2 backdrop-blur-md"
+            class="absolute bottom-5 right-5 z-10 flex items-center gap-2 rounded-full glass"
         >
             <button
+                class="rounded-full px-4 py-1.5 text-white/80 transition-colors hover:bg-blue-500/25 hover:text-blue-300"
+                @click="autoArrange"
+            >
+                ⊞ Arrange
+            </button>
+            <button
+                class="rounded-full px-4 py-1.5 text-white/80 transition-colors hover:bg-green-500/25 hover:text-green-300"
                 @click="
-                    store.openPicker({ x: $event.clientX, y: $event.clientY })
+                    store.openPicker({
+                        x: $event.clientX - 30,
+                        y: $event.clientY - 160,
+                    })
                 "
-                class="text-white transition-colors hover:text-zinc-300"
             >
                 + Add
             </button>
 
             <button
+                class="rounded-full px-4 py-1.5 text-white/80 transition-colors hover:bg-red-500/25 hover:text-red-300"
                 @click="deleteSelected"
-                class="text-white transition-colors hover:text-red-400"
             >
                 ✕ Delete
             </button>
 
+            <span class="mx-1 h-5 w-px bg-white/20" />
+
             <button
+                class="rounded-full bg-white/15 px-4 py-1.5 text-white transition-colors hover:bg-white/30"
                 @click="finish"
-                class="ml-6 text-white transition-colors hover:text-zinc-300"
             >
                 = Finish
             </button>

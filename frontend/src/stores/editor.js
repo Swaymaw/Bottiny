@@ -12,26 +12,97 @@ const edge = (source, port, target) => ({
   markerEnd: { type: MarkerType.ArrowClosed, color: "#888" },
 });
 
-function autoLayout(spec) {
-  const depth = { [spec.start]: 0 };
-  const queue = [spec.start];
-  while (queue.length) {
-    const cur = queue.shift();
-    for (const e of spec.edges) {
-      if (e.from === cur && !(e.to in depth)) {
-        depth[e.to] = depth[cur] + 1;
-        queue.push(e.to);
+function layoutGraph({
+  ids,
+  start,
+  nextOf,
+  size = () => ({ w: 300, h: 200 }),
+}) {
+  const children = new Map(
+    ids.map((id) => [id, nextOf(id).filter((x) => ids.includes(x))]),
+  );
+  const parents = new Map(ids.map((id) => [id, []]));
+
+  for (const id of ids)
+    for (const child of children.get(id)) parents.get(child).push(id);
+
+  const depth = {};
+  const queue = [start];
+  depth[start] = 0;
+
+  for (let i = 0; i < queue.length; i++) {
+    const id = queue[i];
+
+    for (const child of children.get(id)) {
+      const d = depth[id] + 1;
+
+      if (depth[child] == null || d > depth[child]) {
+        depth[child] = d;
+        queue.push(child);
       }
     }
   }
-  const rows = {};
-  return Object.fromEntries(
-    spec.nodes.map((n) => {
-      const d = depth[n.id] ?? 0;
-      rows[d] = (rows[d] ?? -1) + 1;
-      return [n.id, { x: d * 380, y: rows[d] * 220 }];
-    }),
+
+  const unreachable = ids.filter((id) => depth[id] == null);
+
+  let maxDepth = Math.max(0, ...Object.values(depth));
+
+  for (const id of unreachable) depth[id] = ++maxDepth;
+
+  const layers = [];
+
+  for (const id of ids) {
+    const d = depth[id];
+    (layers[d] ??= []).push(id);
+  }
+
+  for (const layer of layers) {
+    layer.sort((a, b) => {
+      const pa = parents.get(a);
+      const pb = parents.get(b);
+
+      const ay =
+        pa.reduce((sum, id) => sum + (layers[depth[id]]?.indexOf(id) ?? 0), 0) /
+        (pa.length || 1);
+      const by =
+        pb.reduce((sum, id) => sum + (layers[depth[id]]?.indexOf(id) ?? 0), 0) /
+        (pb.length || 1);
+
+      return ay - by;
+    });
+  }
+
+  const GAP_X = 180;
+  const GAP_Y = 60;
+
+  const columnWidths = layers.map((layer) =>
+    Math.max(...layer.map((id) => size(id).w), 0),
   );
+
+  const columnHeights = layers.map(
+    (layer) =>
+      layer.reduce((sum, id) => sum + size(id).h, 0) +
+      GAP_Y * Math.max(0, layer.length - 1),
+  );
+
+  const totalHeight = Math.max(...columnHeights, 0);
+
+  const positions = {};
+
+  let x = 0;
+
+  layers.forEach((layer, column) => {
+    let y = (totalHeight - columnHeights[column]) / 2;
+
+    for (const id of layer) {
+      positions[id] = { x, y };
+      y += size(id).h + GAP_Y;
+    }
+
+    x += columnWidths[column] + GAP_X;
+  });
+
+  return positions;
 }
 
 const stripEmpty = (config) =>
@@ -73,7 +144,12 @@ export const useEditorStore = defineStore("editor", {
       this.error = null;
       try {
         const { spec } = await api.getFlow(name);
-        const layout = autoLayout(spec);
+        const layout = layoutGraph({
+          ids: spec.nodes.map((n) => n.id),
+          start: spec.start,
+          nextOf: (id) =>
+            spec.edges.filter((e) => e.from === id).map((e) => e.to),
+        });
         this.nodes = spec.nodes.map((n) => {
           if (!NODE_TYPES[n.type])
             throw new Error(`Unknown node type "${n.type}"`);
@@ -187,6 +263,34 @@ export const useEditorStore = defineStore("editor", {
         if (err) return `${n.id}: ${err}`;
       }
       return null;
+    },
+
+    computeLayout() {
+      const start = this.startNodeId;
+      if (!start) return null;
+
+      const byId = Object.fromEntries(this.nodes.map((n) => [n.id, n]));
+      return layoutGraph({
+        ids: this.nodes.map((n) => n.id),
+        start,
+
+        nextOf: (id) => {
+          const n = byId[id];
+          return NODE_TYPES[n.data.type]
+            .ports(n.data.config)
+            .map(
+              (p) =>
+                this.edges.find(
+                  (e) => e.source === id && e.sourceHandle === p.id,
+                )?.target,
+            )
+            .filter(Boolean);
+        },
+        size: (id) => ({
+          w: byId[id].dimensions?.width ?? 300,
+          h: byId[id].dimensions?.height ?? 200,
+        }),
+      });
     },
 
     async save() {

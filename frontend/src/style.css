@@ -29,3 +29,9 @@ textarea::-webkit-scrollbar-thumb {
 textarea::-webkit-scrollbar-thumb:hover {
     background: #92929f;
 }
+
+@layer components {
+    .glass {
+        @apply border! border-white/20! bg-linear-to-b from-black/30 to-gray-500/5! p-1.5! backdrop-saturate-200! opacity-95!;
+    }
+}

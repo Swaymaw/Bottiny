@@ -9,8 +9,8 @@ onMounted(flows.fetch);
 </script>
 
 <template>
-    <div class="grid h-full grid-cols-[220px_1fr] bg-gray-800">
-        <aside class="overflow-y-auto px-5 py-7">
+    <div class="flex h-screen bg-gray-800">
+        <aside class="w-64 px-5 py-7 shrink-0">
             <h2 class="mb-5 text-xl font-semibold text-white">Flows</h2>
 
             <RouterLink
@@ -19,33 +19,36 @@ onMounted(flows.fetch);
             >
                 + New flow
             </RouterLink>
-
-            <div
-                v-for="flow in flows.items"
-                :key="flow.name"
-                class="mt-10 flex items-center justify-between"
-            >
-                <RouterLink
-                    :to="{
-                        name: 'editor',
-                        params: { name: flow.name },
-                    }"
-                    exact-active-class="text-white"
-                    class="block py-1.5 text-zinc-400 transition-colors hover:text-white"
+            <div class="mt-10 rounded-lg border-4 border-white min-h-3/4">
+                <div
+                    v-for="flow in flows.items"
+                    :key="flow.name"
+                    class="items-start"
                 >
-                    {{ flow.name }}
-                </RouterLink>
+                    <RouterLink
+                        :to="{
+                            name: 'editor',
+                            params: { name: flow.name },
+                        }"
+                        exact-active-class="text-white"
+                        class="py-1.5 text-zinc-400 transition-colors hover:text-white"
+                    >
+                        <div class="items-center m-4 flex justify-between">
+                            {{ flow.name }}
 
-                <input
-                    type="checkbox"
-                    :checked="flow.enabled"
-                    title="Enabled"
-                    @change="flows.toggle(flow)"
-                />
+                            <input
+                                type="checkbox"
+                                :checked="flow.enabled"
+                                title="Enabled"
+                                @change="flows.toggle(flow)"
+                            />
+                        </div>
+                    </RouterLink>
+                </div>
             </div>
         </aside>
 
-        <main class="h-full py-8 pr-8">
+        <main class="min-w-0 flex-1">
             <RouterView />
         </main>
     </div>
