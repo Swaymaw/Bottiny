@@ -77,10 +77,7 @@ async function finish() {
 </script>
 
 <template>
-    <div
-        ref="canvas"
-        class="relative h-full overflow-hidden rounded-3xl bg-zinc-800"
-    >
+    <div ref="canvas" class="relative h-full overflow-hidden bg-zinc-800">
         <VueFlow
             min-zoom="0.10"
             max-zoom="4"

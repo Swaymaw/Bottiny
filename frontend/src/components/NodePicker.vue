@@ -18,13 +18,16 @@ const top = Math.min(props.y, window.innerHeight - 190);
         <li
             v-for="(def, type) in NODE_TYPES"
             :key="type"
-            class="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm text-white/80 transition-colors hover:bg-white/10 hover:text-white"
-            :style="{ color: def.color }"
+            class="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm text-white/80 transition-colors hover:bg-white/10 hover:text-white border-b border-[#444]"
+            :style="{ '--c': def.color }"
             @click="emit('pick', type)"
         >
-            <img :src="def.logo" class="h-4 w-4 shrink-0" />
+            <img
+                :src="def.logo"
+                class="h-8 w-8 shrink-0 bg-(--c) rounded-full p-1.5"
+            />
 
-            <span>{{ def.label }}</span>
+            <span class="ml-2">{{ def.label }}</span>
         </li>
     </ul>
 </template>
