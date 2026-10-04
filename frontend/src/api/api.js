@@ -50,4 +50,4 @@ class Api {
   }
 }
 
-export default new Api("http://localhost:8000/api/v1");
+export default new Api("/api/v1");
