@@ -13,13 +13,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.13"
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v6
+          enabled-cache: true
 
       - name: Install dependencies
         run: uv sync --directory backend --dev
@@ -33,12 +31,6 @@ jobs:
             --cov-report=term-missing \
             --cov-report=xml:../test-results/coverage.xml \
             --cov-report=html:../test-results/htmlcov
-
-      - name: Package coverage report
-        if: always()
-        run: |
-          cd test-results
-          zip -r coverage-report.zip htmlcov
 
       - name: Upload test artifacts
         if: always()
@@ -54,6 +46,8 @@ jobs:
 
     permissions:
       contents: write
+      issues: write
+      pull-requests: write
 
     steps:
       - uses: actions/checkout@v6
@@ -64,8 +58,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "lts/*"
-      - name: Install dependencies
-        run: npm clean-install
+
       - name: Run semantic release
         run: npx semantic-release
         env:
