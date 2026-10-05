@@ -5,14 +5,14 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: hello_world
-      POSTGRES_DB: chatflow
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: boteny
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d boteny"]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -22,7 +22,8 @@ services:
       context: ./backend
       target: dev
     restart: unless-stopped
-    env_file: .env
+    environment:
+      DATABASE_URL: "postgresql+asyncpg://postgres:password@postgres:5432/boteny"
     volumes:
       - ./backend:/app
     depends_on:
@@ -32,7 +33,6 @@ services:
   frontend:
     build:
       context: ./frontend
-
     restart: unless-stopped
     volumes:
       - ./frontend:/app
